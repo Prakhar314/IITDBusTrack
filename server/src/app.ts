@@ -27,7 +27,7 @@ app.get('/', (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use('/getRoutes', UserAuthMiddleware);
-app.get('/getRoutes', (req: Request, res: Response, next: NextFunction) =>{
+app.get('/getRoutes', (req: Request, res: Response, next: NextFunction) => {
     res.send(routeDetailsList);
 });
 
@@ -35,11 +35,12 @@ app.use('/setDriver', AdminAuthMiddleware);
 app.post('/setDriver', (req: Request, res: Response, next: NextFunction) => {
 
     admin
-        .auth()
-        .setCustomUserClaims(req.body.uid, { driver: true })
-        .then(() => {
-            res.json({ 'message': 'Done!' });
-        }).catch((error) => res.status(500).send(error));
+        .auth().getUserByEmail(req.body.email).then((user) => {
+            admin.auth().setCustomUserClaims(user.uid, { driver: true })
+                .then(() => {
+                    res.json({ 'message': 'Done!' });
+                }).catch((error) => { res.status(500).send(error); })
+        }).catch((error) => { res.status(500).send(error); });
 
 });
 
@@ -47,8 +48,8 @@ app.post('/setDriver', (req: Request, res: Response, next: NextFunction) => {
 io.use((socket: any, next: any) => {
     if (socket.handshake.auth && socket.handshake.auth.token) {
         const token = socket.handshake.auth.token;
-        admin.auth().verifyIdToken(token).then((claims) => {
-            socket.decoded = claims;
+        admin.auth().verifyIdToken(token).then((decodedIDToken) => {
+            socket.decoded = decodedIDToken;
         })
             .catch((error) => {
                 next(error);
@@ -66,10 +67,10 @@ io.on("connection", function (socket: any) {
         const initialStatus: BusStatus = socket.query.busStatus;
         addBusStatus(routeID, initialStatus);
         socket.on('update', (room: string, locStatus: BusStatus) => {
-            if(locStatus.newStopPassed){
+            if (locStatus.newStopPassed) {
                 // TODO: Firebase Notif
-                if(locStatus.stopsVisited>0){
-                    io.emit('stopPassed',routeDetailsList[getRouteIndex(room)].busStops[locStatus.stopsVisited-1]);
+                if (locStatus.stopsVisited > 0) {
+                    io.emit('stopPassed', routeDetailsList[getRouteIndex(room)].busStops[locStatus.stopsVisited - 1]);
                 }
             }
             io.to(room).volatile.emit('location', updateBusStatus(room, locStatus));
