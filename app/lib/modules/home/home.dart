@@ -1,3 +1,4 @@
+import 'package:app/modules/home/adminHome.dart';
 import 'package:app/modules/home/userHome.dart';
 import 'package:app/modules/login/auth_Service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,21 +11,27 @@ class HomePage extends StatelessWidget {
   static const route = '/';
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: context.read<AuthenticationService>().waitForCustomClaims(),
-      builder: (context, AsyncSnapshot<IdTokenResult> snapshot) {
-        if (snapshot.hasData) {
-          if (snapshot.data.claims.containsKey('driver') &&
-              snapshot.data.claims['driver']) {
-            return DriverHome();
-          } else {
+    return ChangeNotifierProvider.value(
+      value: context.read<AuthenticationService>().userToken,
+      child: Consumer<UserToken>(
+        builder: (bc, ut, child) {
+          if (ut.tokenLoaded) {
+            print(ut.token.claims);
+            if (ut.token.claims.containsKey('admin') &&
+                ut.token.claims['admin']) {
+              return AdminHome();
+            }
+            if (ut.token.claims.containsKey('driver') &&
+                ut.token.claims['driver']) {
+              return DriverHome();
+            }
             return UserHome();
           }
-        }
-        return Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
-      },
+          return Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      ),
     );
   }
 }
