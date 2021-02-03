@@ -35,41 +35,44 @@ class UserToken extends ChangeNotifier {
 }
 
 class AuthenticationService {
-  final FirebaseAuth _firebaseAuth;
+  final FirebaseAuth firebaseAuth;
   UserToken userToken;
+  User currentUser;
   static const signInText = 'Signed In';
   static const signUpText = 'Signed Up';
   static const setClaimText = 'Claim set';
-  AuthenticationService(this._firebaseAuth) {
-    userToken = UserToken(_firebaseAuth);
+  AuthenticationService(this.firebaseAuth) {
+    userToken = UserToken(firebaseAuth);
   }
 
   Stream<User> get authStateChanges {
-    return _firebaseAuth.authStateChanges();
+    return firebaseAuth.authStateChanges();
   }
 
   Future<void> signOut() async {
-    await _firebaseAuth.signOut().catchError((e) => print(e.message));
+    await firebaseAuth.signOut().catchError((e) => print(e.message));
   }
 
   Future<String> setUserClaim({String email}) async {
     var authToken = userToken.token.token;
-    var httpResponse = await http.post(url + '/setDriver', headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $authToken',
-    });
-    if (httpResponse.statusCode > 399) {
-      return jsonDecode(httpResponse.body)['error'];
-    }
-    return setClaimText;
+    var httpResponse = await http.post(url + '/setDriver',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode(<String, String>{
+          'email': email,
+        }));
+    return jsonDecode(httpResponse.body)['message'];
   }
 
   Future<String> signIn({String email, String password}) async {
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
+      await firebaseAuth.signInWithEmailAndPassword(
           email: email, password: password);
       userToken.refresh(true);
+      currentUser = firebaseAuth.currentUser;
       return signInText;
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -78,7 +81,7 @@ class AuthenticationService {
 
   Future<String> signUp({String email, String password}) async {
     try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
+      await firebaseAuth.createUserWithEmailAndPassword(
           email: email, password: password);
       return signUpText;
     } on FirebaseAuthException catch (e) {

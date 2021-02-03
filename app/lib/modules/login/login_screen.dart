@@ -1,4 +1,4 @@
-import 'package:app/modules/login/auth_Service.dart';
+import 'package:app/modules/login/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -38,26 +38,51 @@ class _LoginScreenState extends State<LoginScreen> {
             textInputAction: TextInputAction.done,
             decoration: InputDecoration(labelText: 'Password'),
           ),
+          Padding(padding: EdgeInsets.all(8)),
           signingin
               ? CircularProgressIndicator()
-              : RaisedButton(
-                  child: Text('Sign In'),
-                  onPressed: () async {
-                    setState(() {
-                      signingin = true;
-                    });
-                    var signinResponse = await context
-                        .read<AuthenticationService>()
-                        .signIn(
-                            email: emailController.text.trim(),
-                            password: passwordController.text);
-                    if (signinResponse != AuthenticationService.signInText) {
-                      setState(() {
-                        signingin = false;
-                        error = signinResponse;
-                      });
-                    }
-                  })
+              : Row(
+                  children: [
+                    RaisedButton(
+                        child: Text('Sign In'),
+                        onPressed: () async {
+                          setState(() {
+                            signingin = true;
+                          });
+                          var signinResponse = await context
+                              .read<AuthenticationService>()
+                              .signIn(
+                                  email: emailController.text.trim(),
+                                  password: passwordController.text);
+                          if (signinResponse !=
+                              AuthenticationService.signInText) {
+                            setState(() {
+                              signingin = false;
+                              error = signinResponse;
+                            });
+                          }
+                        }),
+                    RaisedButton(
+                        child: Text('Sign Up'),
+                        onPressed: () async {
+                          setState(() {
+                            signingin = true;
+                          });
+                          var signupResponse = await context
+                              .read<AuthenticationService>()
+                              .signUp(
+                                  email: emailController.text.trim(),
+                                  password: passwordController.text);
+                          if (signupResponse !=
+                              AuthenticationService.signUpText) {
+                            setState(() {
+                              signingin = false;
+                              error = signupResponse;
+                            });
+                          }
+                        }),
+                  ],
+                )
         ]),
       ),
     );

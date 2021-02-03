@@ -1,7 +1,7 @@
 import 'package:app/modules/home/adminHome.dart';
 import 'package:app/modules/home/userHome.dart';
-import 'package:app/modules/login/auth_Service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../data/dataProvider.dart';
+import 'package:app/modules/login/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +13,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: context.read<AuthenticationService>().userToken,
-      child: Consumer<UserToken>(
+      builder: (context, child) => Consumer<UserToken>(
         builder: (bc, ut, child) {
           if (ut.tokenLoaded) {
             print(ut.token.claims);
@@ -23,7 +23,8 @@ class HomePage extends StatelessWidget {
             }
             if (ut.token.claims.containsKey('driver') &&
                 ut.token.claims['driver']) {
-              return DriverHome();
+              return DriverHome(new DataProvider(ut.token.token));
+              // return DriverHome();
             }
             return UserHome();
           }
