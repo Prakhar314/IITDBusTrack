@@ -17,7 +17,7 @@ class DriverHome extends StatefulWidget {
 
 class _DriverHomeState extends State<DriverHome> {
   bool locationServiceRunning = false;
-  Function destroySocket;
+  Function disconnectSocket;
 
   @override
   Widget build(BuildContext context1) {
@@ -67,7 +67,7 @@ class _DriverHomeState extends State<DriverHome> {
                         RaisedButton(
                             child: Text('Start'),
                             onPressed: () async {
-                              print('starting');
+                              // print('starting');
                               Function locListener = dp.getServerUpdateFunction(
                                   dp.currentRoute.id,
                                   context1
@@ -81,16 +81,16 @@ class _DriverHomeState extends State<DriverHome> {
                                 icon: "@mipmap/ic_launcher",
                               );
                               await BackgroundLocation.setAndroidConfiguration(
-                                  1000);
+                                  1);
                               await BackgroundLocation.stopLocationService();
                               await BackgroundLocation.startLocationService();
-                              print(locListener);
+                              // print(locListener);
                               String busid = context1
                                   .read<AuthenticationService>()
                                   .firebaseAuth
                                   .currentUser
                                   .uid;
-                              print(locListener(BusStatus()));
+                              // print(locListener(BusStatus()));
                               BackgroundLocation.getLocationUpdates((location) {
                                 // locListener();
                                 // Any error here won't print.
@@ -105,7 +105,7 @@ class _DriverHomeState extends State<DriverHome> {
                                     time: location.time.toInt()));
                               });
                               setState(() {
-                                destroySocket = () => dp.socket.disconnect();
+                                disconnectSocket = dp.socket.disconnect;
                                 locationServiceRunning = true;
                               });
                             }),
@@ -114,7 +114,7 @@ class _DriverHomeState extends State<DriverHome> {
                             child: Text('Stop'),
                             onPressed: () {
                               BackgroundLocation.stopLocationService();
-                              destroySocket();
+                              disconnectSocket();
                               setState(() {
                                 locationServiceRunning = false;
                               });
@@ -140,7 +140,7 @@ class _DriverHomeState extends State<DriverHome> {
   @override
   void dispose() {
     BackgroundLocation.stopLocationService();
-    destroySocket();
+    disconnectSocket();
     super.dispose();
   }
 }

@@ -42,7 +42,7 @@ class DataProvider extends ChangeNotifier {
         'Authorization': 'Bearer $_authToken',
       },
     );
-    print(response);
+    // print(response);
     List<dynamic> responseList = json.decode(response.body);
     routeDetailsList =
         responseList.map((e) => RouteDetails.fromJson(e)).toList();
@@ -66,11 +66,11 @@ class DataProvider extends ChangeNotifier {
     IO.OptionBuilder opn = IO.OptionBuilder()
         .setTransports(['websocket']).setExtraHeaders({'auth': _authToken});
     if (query != null) {
-      print(query);
+      // print(query);
       opn = opn.setQuery(query);
     }
     socket = IO.io(url, opn.build());
-    print('conect stat');
+    // print('conect stat');
     socket.onConnect((data) {
       socketConnected = true;
       notifyListeners();
@@ -106,7 +106,7 @@ class DataProvider extends ChangeNotifier {
         .busStops);
 
     void func(BusStatus newStatus) {
-      print('kkk');
+      // print('kkk');
       if (socket.connected) {
         print('emitting new location');
         socket.emit(
@@ -130,7 +130,7 @@ class BusState {
     } else {
       newStatus.stopsVisited = cacheStatus.stopsVisited;
       for (int i = cacheStatus.stopsVisited; i < busStopList.length; i++) {
-        print(distance(busStopList[i].coord, newStatus.coord));
+        // print(distance(busStopList[i].coord, newStatus.coord));
         if (distance(busStopList[i].coord, newStatus.coord) < 100) {
           newStatus.stopsVisited = i + 1;
           newStatus.newStopPassed = true;

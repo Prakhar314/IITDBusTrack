@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
       builder: (context, child) => Consumer<UserToken>(
         builder: (bc, ut, child) {
           if (ut.tokenLoaded) {
-            print(ut.token.claims);
+            // print(ut.token.claims);
             if (ut.token.claims.containsKey('admin') &&
                 ut.token.claims['admin']) {
               return AdminHome();

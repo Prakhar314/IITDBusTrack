@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
@@ -36,6 +36,7 @@ class UserToken extends ChangeNotifier {
 
 class AuthenticationService {
   final FirebaseAuth firebaseAuth;
+  // final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   UserToken userToken;
   User currentUser;
   static const signInText = 'Signed In';
@@ -43,11 +44,40 @@ class AuthenticationService {
   static const setClaimText = 'Claim set';
   AuthenticationService(this.firebaseAuth) {
     userToken = UserToken(firebaseAuth);
+    // firebaseMessaging.getToken().then((value) => print(value));
   }
 
   Stream<User> get authStateChanges {
     return firebaseAuth.authStateChanges();
   }
+
+  // Future<bool> subscribeToTopic(String topic) async {
+  //   await firebaseMessaging.subscribeToTopic(topic).catchError(() {
+  //     return false;
+  //   });
+  //   return true;
+  // }
+
+  // Future<bool> unsubscribeFromTopic(String topic) async {
+  //   await firebaseMessaging.unsubscribeFromTopic(topic).catchError(() {
+  //     return false;
+  //   });
+  //   return true;
+  // }
+
+  // Future<String> unsubscribeFromTopic(String topic) async {
+  //   var authToken = userToken.token.token;
+  //   var httpResponse = await http.post(url + '/unsubscribe',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Accept': 'application/json',
+  //         'Authorization': 'Bearer $authToken',
+  //       },
+  //       body: jsonEncode(<String, String>{
+  //         'topic': topic,
+  //       }));
+  //   return jsonDecode(httpResponse.body)['message'];
+  // }
 
   Future<void> signOut() async {
     await firebaseAuth.signOut().catchError((e) => print(e.message));

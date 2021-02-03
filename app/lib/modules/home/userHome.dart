@@ -14,6 +14,8 @@ class UserHome extends StatefulWidget {
 }
 
 class _UserHomeState extends State<UserHome> {
+  Function disconnectSocket;
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
@@ -48,6 +50,7 @@ class _UserHomeState extends State<UserHome> {
                                   .toList(),
                               onChanged: (value) {
                                 dp.subscribe(value);
+                                disconnectSocket = dp.socket.disconnect;
                                 dp.setCurrentRoute(value);
                               }),
                           MapWidget()
@@ -56,5 +59,11 @@ class _UserHomeState extends State<UserHome> {
                     )
                   : CircularProgressIndicator());
         }));
+  }
+
+  @override
+  void dispose() {
+    disconnectSocket();
+    super.dispose();
   }
 }
