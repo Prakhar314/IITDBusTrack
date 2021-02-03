@@ -1,3 +1,5 @@
+import 'package:latlong/latlong.dart';
+
 class RouteDetails {
   String id;
   List<Coordinates> polylinePoints;
@@ -51,6 +53,10 @@ class Coordinates {
     data['lat'] = this.lat;
     data['long'] = this.long;
     return data;
+  }
+
+  LatLng get latlng {
+    return LatLng(lat, long);
   }
 }
 
@@ -109,8 +115,8 @@ class BusStatus {
   bool newStopPassed;
   Coordinates coord;
   String busid;
-  double bearing;
-  double time;
+  int bearing;
+  int time;
 
   BusStatus(
       {this.status,
@@ -124,7 +130,7 @@ class BusStatus {
 
   BusStatus.fromJson(Map<String, dynamic> json) {
     status = json['status'];
-    speed = json['speed'];
+    speed = (json['speed'] ?? 0).toDouble();
     stopsVisited = json['stopsVisited'];
     newStopPassed = json['newStopPassed'];
     coord =

@@ -13,6 +13,7 @@ import '../../constants.dart';
 class DataProvider extends ChangeNotifier {
   final String _authToken;
   List<RouteDetails> routeDetailsList;
+  int currentRouteIndex;
   IO.Socket socket;
   bool routesLoaded = false;
   bool socketConnected = false;
@@ -21,6 +22,16 @@ class DataProvider extends ChangeNotifier {
 
   DataProvider(this._authToken) {
     getRoutes();
+  }
+
+  RouteDetails get currentRoute {
+    return routeDetailsList[currentRouteIndex ?? 0];
+  }
+
+  void setCurrentRoute(String routeID) {
+    currentRouteIndex =
+        routeDetailsList.indexWhere((element) => element.id == routeID);
+    notifyListeners();
   }
 
   Future<void> getRoutes() async {
@@ -40,11 +51,14 @@ class DataProvider extends ChangeNotifier {
   }
 
   void subscribe(String routeId) {
-    getSocket();
+    if (socket == null) {
+      getSocket();
+    }
     socket.emit('join', routeId);
     socket.on('location', (data) {
-      print(data);
-      streamSocket.addResponse(BusRoute.fromJson(json.decode(data)));
+      // print(data);
+      print('received update');
+      streamSocket.addResponse(BusRoute.fromJson(data));
     });
   }
 
@@ -77,7 +91,14 @@ class DataProvider extends ChangeNotifier {
     // }
 
     // Map<Str
-    getSocket({'routeID': routeID, 'busID': busID});
+    if (socket == null) {
+      getSocket({'routeID': routeID, 'busID': busID});
+    } else {
+      socket.io.options['query'] = {'routeID': routeID, 'busID': busID};
+      socket.io
+        ..disconnect()
+        ..connect();
+    }
     // TODO:change init
 
     BusState currentBusState = new BusState(routeDetailsList
@@ -109,6 +130,7 @@ class BusState {
     } else {
       newStatus.stopsVisited = cacheStatus.stopsVisited;
       for (int i = cacheStatus.stopsVisited; i < busStopList.length; i++) {
+        print(distance(busStopList[i].coord, newStatus.coord));
         if (distance(busStopList[i].coord, newStatus.coord) < 100) {
           newStatus.stopsVisited = i + 1;
           newStatus.newStopPassed = true;

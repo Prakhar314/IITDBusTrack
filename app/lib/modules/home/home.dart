@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
               return DriverHome(new DataProvider(ut.token.token));
               // return DriverHome();
             }
-            return UserHome();
+            return UserHome(new DataProvider(ut.token.token));
           }
           return Scaffold(
             body: Center(child: CircularProgressIndicator()),
