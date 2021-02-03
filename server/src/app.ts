@@ -96,7 +96,7 @@ io.on("connection", function (socket: any) {
         socket.on('join', (room: string) => {
             console.log('user joined');
             if(currentRoom.length!==0){
-                console.log(currentRoom);
+                console.log('old room'+currentRoom);
                 socket.leave(currentRoom);
             }
             currentRoom=room;
