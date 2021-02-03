@@ -4,7 +4,7 @@ export const currentStatus: Status = {
     routes: [{ id: 'Route 1' }, { id: 'Route 2' }]
 };
 
-export const addBusStatus = (routeID: string, busStatus: BusStatus): Route => {
+export const updateBusStatus = (routeID: string, busStatus: BusStatus): Route => {
     const routeToPushTo = getRoute(routeID);
     if (routeToPushTo.locationData) {
         const index = routeToPushTo.locationData.findIndex((value: BusStatus) => value.busid == busStatus.busid);
@@ -17,18 +17,6 @@ export const addBusStatus = (routeID: string, busStatus: BusStatus): Route => {
     }
     else {
         routeToPushTo.locationData = [busStatus];
-    }
-    return routeToPushTo;
-}
-
-
-export const updateBusStatus = (routeID: string, busStatus: BusStatus): Route => {
-    const routeToPushTo = getRoute(routeID);
-    if (routeToPushTo.locationData) {
-        const index = routeToPushTo.locationData.findIndex((value: BusStatus) => value.busid == busStatus.busid);
-        if (index !== -1) {
-            routeToPushTo.locationData[index] = busStatus;
-        }
     }
     return routeToPushTo;
 }

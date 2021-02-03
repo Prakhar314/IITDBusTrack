@@ -1,17 +1,21 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import admin from './admin';
 import { BusStatus } from './interfaces';
-import { AdminAuthMiddleware, UserAuthMiddleware } from './middlewares'
-import { addBusStatus, getRoute, getRouteIndex, removeBusStatus, routeDetailsList, updateBusStatus } from './status'
+import { AdminAuthMiddleware, errorMiddleware, UserAuthMiddleware } from './middlewares'
+import { getRoute, getRouteIndex, removeBusStatus, routeDetailsList, updateBusStatus } from './status'
+import cors from 'cors';
 
 const app: Application = express();
 
 app.use(express.json());// for parsing application/json
 app.use(express.urlencoded({ extended: true }));
-app.set("port", process.env.PORT || 3000);
-
+app.use(cors());
 let http = require("http").Server(app);
-let io = require("socket.io")(http);
+let io = require("socket.io")(http, {
+    cors: {
+        origin: '*',
+    }
+});
 
 
 admin
@@ -23,7 +27,7 @@ admin
     });
 
 app.get('/', (req: Request, res: Response, next: NextFunction) => {
-    res.send('Hello World');
+    res.sendFile(__dirname + '/index.html');
 });
 
 app.use('/getRoutes', UserAuthMiddleware);
@@ -33,7 +37,6 @@ app.get('/getRoutes', (req: Request, res: Response, next: NextFunction) => {
 
 app.use('/setDriver', AdminAuthMiddleware);
 app.post('/setDriver', (req: Request, res: Response, next: NextFunction) => {
-
     admin
         .auth().getUserByEmail(req.body.email).then((user) => {
             admin.auth().setCustomUserClaims(user.uid, { driver: true })
@@ -46,10 +49,13 @@ app.post('/setDriver', (req: Request, res: Response, next: NextFunction) => {
 
 
 io.use((socket: any, next: any) => {
-    if (socket.handshake.auth && socket.handshake.auth.token) {
-        const token = socket.handshake.auth.token;
+    // console.log('got request');
+    if (socket.handshake.headers.auth) {
+        const token = socket.handshake.headers.auth;
         admin.auth().verifyIdToken(token).then((decodedIDToken) => {
+            // console.log('verified');
             socket.decoded = decodedIDToken;
+            next();
         })
             .catch((error) => {
                 next(error);
@@ -62,31 +68,45 @@ io.use((socket: any, next: any) => {
 
 io.on("connection", function (socket: any) {
     console.log("connected");
+    console.log(socket.handshake.query);
     if (socket.decoded && socket.decoded.driver) {
-        const routeID = socket.query.routeID;
-        const initialStatus: BusStatus = socket.query.busStatus;
-        addBusStatus(routeID, initialStatus);
-        socket.on('update', (room: string, locStatus: BusStatus) => {
+        const routeID = socket.handshake.query.routeID;
+        const busID: string = socket.handshake.query.busID;
+        const route = routeDetailsList[getRouteIndex(routeID)];
+        console.log('driver connected');
+        socket.on('update', (locStatus: BusStatus) => {
+            console.log('update received');
+            // console.log(getRoute(routeID));
             if (locStatus.newStopPassed) {
                 // TODO: Firebase Notif
                 if (locStatus.stopsVisited > 0) {
-                    io.emit('stopPassed', routeDetailsList[getRouteIndex(room)].busStops[locStatus.stopsVisited - 1]);
+                    io.emit('stopPassed', route.busStops[locStatus.stopsVisited - 1]);
                 }
             }
-            io.to(room).volatile.emit('location', updateBusStatus(room, locStatus));
+            io.to(routeID).volatile.emit('location', updateBusStatus(routeID, locStatus));
         });
         socket.on('disconnect', (reason: string) => {
-            removeBusStatus(routeID, initialStatus.busid);
+            console.log('bus disconnected');
+            removeBusStatus(routeID, busID);
+            io.to(routeID).volatile.emit('location', getRoute(routeID));
         })
     }
     else {
+        let currentRoom='';
         socket.on('join', (room: string) => {
+            console.log('user joined');
+            if(currentRoom.length!==0){
+                console.log(currentRoom);
+                socket.leave(currentRoom);
+            }
+            currentRoom=room;
             socket.join(room);
             socket.volatile.emit('location', getRoute(room));
         })
     }
 });
 
+app.use(errorMiddleware);
 const server = http.listen(3000, function () {
     console.log("listening on *:3000");
 });
